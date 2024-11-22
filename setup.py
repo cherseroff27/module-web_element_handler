@@ -6,14 +6,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         'selenium',
-        'pyperclip',
-        'browser_manager @ git+https://github.com/cherseroff27/module-browser_manager.git',
-        'browser_manager @ git+https://github.com/cherseroff27/module-web_element_handler.git',
-        'browser_manager @ git+https://github.com/cherseroff27/module-manual_script_control.git',
     ],
-    description='Генерация комментариев через ChatGPT.'
-                '(Предполагается автоматизация с помощью модуля browser_manager,'
-                'использующего selenium, undetected_chromedriver).',
+    description='Модуль для продвинутого поиска жлемента через Selenium по множеству локаторов.'
+                'А также для эмуляции движения и клика мыши по элементу с помощью ActionChains.',
     author='cherseroff',
     author_email='proffitm1nd@gmail.com',
     url='https://github.com/cherseroff27/module-web_element_handler.git',
