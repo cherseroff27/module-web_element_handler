@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='module-web_elements_handler',
+    name='web_elements_handler',
     version='1.0',
     packages=find_packages(),
     install_requires=[
