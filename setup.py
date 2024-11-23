@@ -11,7 +11,7 @@ setup(
                 'А также для эмуляции движения и клика мыши по элементу с помощью ActionChains.',
     author='cherseroff',
     author_email='proffitm1nd@gmail.com',
-    url='https://github.com/cherseroff27/web_elements_handler.git',
+    url='https://github.com/cherseroff27/module-web_elements_handler.git',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
