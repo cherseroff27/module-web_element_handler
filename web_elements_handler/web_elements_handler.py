@@ -1,7 +1,8 @@
+import random
 import time
 from typing import Optional, Tuple
 
-from selenium.common import TimeoutException, StaleElementReferenceException
+from selenium.common import TimeoutException, StaleElementReferenceException, ElementNotInteractableException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -132,3 +133,19 @@ class WebElementsHandler:
         except Exception as e:
             print(f"Ошибка при проверке видимости элемента: {e}")
             return False
+
+
+    @staticmethod
+    def slow_typing(element, text):
+        """
+        Печатает текст с задержкой, чтобы имитировать ввод вручную.
+        Проверяет, что элемент актуален перед каждой отправкой символа.
+        """
+        for char in text:
+            delay = random.uniform(0.015, 0.15)
+            try:
+                element.send_keys(char)
+            except ElementNotInteractableException:
+                print("Элемент недоступен для ввода.")
+                raise
+            time.sleep(delay)
