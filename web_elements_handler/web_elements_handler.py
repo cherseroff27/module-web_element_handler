@@ -136,13 +136,22 @@ class WebElementsHandler:
 
 
     @staticmethod
-    def slow_typing(element, text):
+    def slow_typing(element: WebElement, text: str, driver: WebDriver = None, use_clipboard: bool = False):
         """
         Печатает текст с задержкой, чтобы имитировать ввод вручную.
         Проверяет, что элемент актуален перед каждой отправкой символа.
         :param element: Элемент для ввода текста, полученный ранее.
         :param text: Текст, который необходимо ввести.
+        :param driver: WebDriver, используется, если нужно сфокусироваться на элементе с помощью javascript
+        :param use_clipboard: Флаг, отвечающий за то, нужно ли вставлять текст в поле сразу полностью
         """
+        if driver is not None:
+            driver.execute_script("arguments[0].focus();", element)
+
+        if use_clipboard:
+            element.send_keys(text)
+            return
+
         for char in text:
             delay = random.uniform(0.015, 0.15)
             try:
