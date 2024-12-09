@@ -48,7 +48,7 @@ class WebElementsHandler:
                 *locator_tuples, driver=driver, timeout=timeout, interval=interval
             )
         except TimeoutException as e:
-            print(f"Элемент не найден за {timeout} секунд. Ошибка: {e}")
+            print(f"Элемент с одним из этих локаторов {locator_tuples} не найден за {interval} секунд. Ошибка: {e}")
             return None
 
     @staticmethod
@@ -73,7 +73,7 @@ class WebElementsHandler:
                 *locator_tuples, driver=driver, timeout=timeout, interval=interval
             )
         except TimeoutException as e:
-            print(f"Элемент не найден за {timeout} секунд. Ошибка: {e}")
+            print(f"Элемент с одним из этих локаторов {locator_tuples} не найден за {interval} секунд. Ошибка: {e}")
             return None
 
     @staticmethod
@@ -97,11 +97,14 @@ class WebElementsHandler:
                     *[EC.presence_of_element_located(locator) for locator in locators]
                 ))
                 time.sleep(1)  # Дополнительная задержка
-                return element
+                if element is not None:
+                    return element
+                else:
+                    return None
             except StaleElementReferenceException:
                 print("Элемент обновился в DOM. Повторяем попытку...")
             except TimeoutException:
-                print(f"Элемент не найден в течение {timeout} секунд.")
+                print(f"Элемент не найден в течение {interval} секунд.")
             except Exception as e:
                 print(f"Произошла ошибка при поиске элемента: {e}")
             time.sleep(0.5)  # Небольшая задержка перед повторной попыткой
