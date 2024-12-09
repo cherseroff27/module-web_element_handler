@@ -15,21 +15,45 @@ class WebElementsHandler:
     def __init__(self):
         self.something = None
 
-
     @staticmethod
     def move_to_element_and_click(actions: ActionChains, element_to_hover: WebElement):
         try:
-                actions.move_to_element(element_to_hover).perform()  # Наведение на элемент
-                actions.click(element_to_hover).perform()  # Клик по элементу
+            actions.move_to_element(element_to_hover).perform()  # Наведение на элемент
+            actions.click(element_to_hover).perform()  # Клик по элементу
         except TimeoutException:
             print("Элемент не доступен для клика.")
         except Exception as e:
             print(f"Произошла ошибка при попытке кликнуть по элементу: {e}")
 
+    @staticmethod
+    def wait_for_element_css(
+            *locators: str, driver, timeout: int = 30, interval: int = 1
+    ) -> Optional[WebElement]:
+        """
+        Ждёт, пока элемент станет доступен.
+
+        :param locators: Локаторы элементов в формате CSS Selector.
+        :param driver: WebDriver Selenium.
+        :param timeout: Таймаут ожидания в секундах.
+        :param interval: Интервал повторных попыток в секундах.
+        :param interval: Интервал времени для повторного поиска в рамках таймаута
+        :return: WebElement, если он найден и доступен, иначе None.
+        """
+        # Преобразование каждого локатора CSS Selector в кортеж формата (By.CSS_SELECTOR, locator)
+        locator_tuples = [(By.CSS_SELECTOR, locator) for locator in locators]
+
+        # Используем wait_for_element_tuple для выполнения ожидания
+        try:
+            return WebElementsHandler.wait_for_element_tuple(
+                *locator_tuples, driver=driver, timeout=timeout, interval=interval
+            )
+        except TimeoutException as e:
+            print(f"Элемент не найден за {timeout} секунд. Ошибка: {e}")
+            return None
 
     @staticmethod
     def wait_for_element_xpath(
-            *locators: str, driver, timeout: int = 30
+            *locators: str, driver, timeout: int = 30, interval: int=1
     ) -> Optional[WebElement]:
         """
         Ждёт, пока элемент станет доступен
@@ -37,43 +61,51 @@ class WebElementsHandler:
         :param locators: Локаторы элементов в формате XPath.
         :param driver: WebDriver Selenium.
         :param timeout: Таймаут ожидания в секундах.
+        :param interval: Интервал времени для повторного поиска в рамках таймаута
         :return: WebElement, если он найден и доступен, иначе None.
         """
+        # Преобразование каждого локатора XPath в кортеж формата (By.XPATH, locator)
+        locator_tuples = [(By.XPATH, locator) for locator in locators]
+
+        # Используем wait_for_element_tuple для выполнения ожидания
         try:
-            element = WebDriverWait(driver, timeout).until(EC.any_of(  # Ждём, пока элемент появится на странице
-                *[EC.presence_of_element_located((By.XPATH, locator)) for locator in locators]
-            ))
-            time.sleep(1)  # Дополнительная задержка
-            return element
-
-        except TimeoutException:
-            print(f"Элемент не найден за {timeout} секунд.")
+            return WebElementsHandler.wait_for_element_tuple(
+                *locator_tuples, driver=driver, timeout=timeout, interval=interval
+            )
+        except TimeoutException as e:
+            print(f"Элемент не найден за {timeout} секунд. Ошибка: {e}")
             return None
-
 
     @staticmethod
     def wait_for_element_tuple(
-            *locators: Tuple[str, str], driver, timeout: int = 30
+            *locators: Tuple[str, str], driver, timeout: int = 30, interval: int = 1
     ) -> Optional[WebElement]:
         """
-        Ждёт, пока элемент станет доступен
+        Ждёт, пока элемент станет доступен, пытается найти его каждый interval в рамках заданного timeout
 
-        :param locators: Локаторы элементов в формате Tuple. Например, (By.CSS_SELECTOR, locator)
+        :param locators: Локаторы в формате Tuple. Например, (By.CSS_SELECTOR, locator) или (By.XPATH, locator)
         :param driver: WebDriver Selenium.
         :param timeout: Таймаут ожидания в секундах.
+        :param interval: Интервал времени для повторного поиска в рамках таймаута
         :return: WebElement, если он найден и доступен, иначе None.
         """
-        try:
-            element = WebDriverWait(driver, timeout).until(EC.any_of(   # Ждём, пока элемент появится на странице
-                *[EC.presence_of_element_located(locator) for locator in locators]
-            ))
-            time.sleep(1)   # Дополнительная задержка
-            return element
+        end_time = time.time() + timeout
 
-        except TimeoutException:
-            print(f"Элемент не найден за {timeout} секунд.")
-            return None
-
+        while time.time() < end_time:
+            try:
+                element = WebDriverWait(driver, interval).until(EC.any_of(  # Ждём, пока элемент появится на странице
+                    *[EC.presence_of_element_located(locator) for locator in locators]
+                ))
+                time.sleep(1)  # Дополнительная задержка
+                return element
+            except StaleElementReferenceException:
+                print("Элемент обновился в DOM. Повторяем попытку...")
+            except TimeoutException:
+                print(f"Элемент не найден в течение {timeout} секунд.")
+            except Exception as e:
+                print(f"Произошла ошибка при поиске элемента: {e}")
+            time.sleep(0.5)  # Небольшая задержка перед повторной попыткой
+        raise TimeoutException(f"Не удалось найти элементы с указанными локаторами: {locators}")
 
     @staticmethod
     def ensure_element_is_interactable(driver: WebDriver, locator: Tuple[str, str], timeout: int = 10) -> bool:
@@ -108,7 +140,6 @@ class WebElementsHandler:
             print("Элемент был перестроен в DOM. Повторяем попытку...")
             return WebElementsHandler.ensure_element_is_interactable(driver, locator, timeout)
 
-
     @staticmethod
     def is_element_visible(driver: WebDriver, element: WebElement) -> bool:
         """
@@ -133,7 +164,6 @@ class WebElementsHandler:
         except Exception as e:
             print(f"Ошибка при проверке видимости элемента: {e}")
             return False
-
 
     @staticmethod
     def slow_typing(element: WebElement, text: str, driver: WebDriver = None, use_clipboard: bool = False):
